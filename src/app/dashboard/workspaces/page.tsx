@@ -1,7 +1,6 @@
 'use client';
 
 import PageContainer from '@/components/layout/page-container';
-import { OrganizationList } from '@clerk/nextjs';
 import { workspacesInfoContent } from '@/config/infoconfig';
 
 export default function WorkspacesPage() {
@@ -11,18 +10,14 @@ export default function WorkspacesPage() {
       pageDescription='Manage your workspaces and switch between them'
       infoContent={workspacesInfoContent}
     >
-      <OrganizationList
-        appearance={{
-          elements: {
-            organizationListBox: 'space-y-2',
-            organizationPreview: 'rounded-lg border p-4 hover:bg-accent',
-            organizationPreviewMainIdentifier: 'text-lg font-semibold',
-            organizationPreviewSecondaryIdentifier: 'text-sm text-muted-foreground'
-          }
-        }}
-        afterSelectOrganizationUrl='/dashboard/workspaces/team'
-        afterCreateOrganizationUrl='/dashboard/workspaces/team'
-      />
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <div className='space-y-4 text-center'>
+          <h2 className='text-2xl font-semibold'>Workspaces Feature Coming Soon</h2>
+          <p className='text-muted-foreground'>
+            Organization management is not yet available with the current authentication provider.
+          </p>
+        </div>
+      </div>
     </PageContainer>
   );
 }

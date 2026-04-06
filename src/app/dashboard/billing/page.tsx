@@ -2,52 +2,35 @@
 
 import PageContainer from '@/components/layout/page-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useOrganization } from '@clerk/nextjs';
-import { PricingTable } from '@clerk/nextjs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Icons } from '@/components/icons';
 import { billingInfoContent } from '@/config/infoconfig';
 
 export default function BillingPage() {
-  const { organization, isLoaded } = useOrganization();
-
   return (
     <PageContainer
-      isLoading={!isLoaded}
-      access={!!organization}
-      accessFallback={
-        <div className='flex min-h-[400px] items-center justify-center'>
-          <div className='space-y-2 text-center'>
-            <h2 className='text-2xl font-semibold'>No Organization Selected</h2>
-            <p className='text-muted-foreground'>
-              Please select or create an organization to view billing information.
-            </p>
-          </div>
-        </div>
-      }
       infoContent={billingInfoContent}
       pageTitle='Billing & Plans'
-      pageDescription={`Manage your subscription and usage limits for ${organization?.name}`}
+      pageDescription='Manage your subscription and usage limits'
     >
       <div className='space-y-6'>
         {/* Info Alert */}
         <Alert>
           <Icons.info className='h-4 w-4' />
           <AlertDescription>
-            Plans and subscriptions are managed through Clerk Billing. Subscribe to a plan to unlock
-            features and higher limits.
+            Billing and subscription management is not yet available with the current authentication provider.
           </AlertDescription>
         </Alert>
 
-        {/* Clerk Pricing Table */}
+        {/* Placeholder Card */}
         <Card>
           <CardHeader>
             <CardTitle>Available Plans</CardTitle>
-            <CardDescription>Choose a plan that fits your organization's needs</CardDescription>
+            <CardDescription>Billing integration coming soon</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='mx-auto max-w-4xl'>
-              <PricingTable for='organization' />
+            <div className='flex min-h-[200px] items-center justify-center text-muted-foreground'>
+              Billing features are not yet available.
             </div>
           </CardContent>
         </Card>

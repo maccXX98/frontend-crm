@@ -1,7 +1,6 @@
 'use client';
 
 import PageContainer from '@/components/layout/page-container';
-import { OrganizationProfile } from '@clerk/nextjs';
 import { teamInfoContent } from '@/config/infoconfig';
 
 export default function TeamPage() {
@@ -11,7 +10,14 @@ export default function TeamPage() {
       pageDescription='Manage your workspace team, members, roles, security and more.'
       infoContent={teamInfoContent}
     >
-      <OrganizationProfile />
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <div className='space-y-4 text-center'>
+          <h2 className='text-2xl font-semibold'>Team Management Coming Soon</h2>
+          <p className='text-muted-foreground'>
+            Organization team features are not yet available with the current authentication provider.
+          </p>
+        </div>
+      </div>
     </PageContainer>
   );
 }
