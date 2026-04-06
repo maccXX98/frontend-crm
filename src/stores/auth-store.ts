@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { redirect } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'; // Backend
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api'; // Backend (includes /api prefix)
 
 export interface User {
   firstname: string;
@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
 
       login: async (loginValue: string, password: string) => {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
+        const res = await fetch(`${API_URL}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ login: loginValue, password })
@@ -86,7 +86,7 @@ export const useAuthStore = create<AuthStore>()(
           return;
         }
 
-        const res = await fetch(`${API_URL}/api/auth/refresh`, {
+        const res = await fetch(`${API_URL}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: refreshToken })

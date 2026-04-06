@@ -1,17 +1,17 @@
 // ============================================================
 // Product Service — Data Access Layer
 // ============================================================
-// BFF Pattern: This service calls Next.js route handlers.
+// BFF Pattern: This service calls Next.js route handlers (SAME ORIGIN).
 // Route handlers proxy requests to NestJS backend.
 //
-// Route handlers: src/app/api/products/route.ts
-//   GET  /api/products      → NestJS GET /products
-//   POST /api/products      → NestJS POST /products
-//   GET  /api/products/:id → NestJS GET /products/:id
-//   PUT  /api/products/:id → NestJS PATCH /products/:id
-//   DELETE /api/products/:id → NestJS DELETE /products/:id
+// Flow:
+//   service.ts (calls) → /api/products (Next.js route handler on same origin)
+//                              ↓
+//                     route handler proxies to NestJS with auth token
 //
-// NestJS runs on: http://localhost:3001 (or BACKEND_URL env)
+// IMPORTANT: service.ts calls RELATIVE paths like /api/products
+// These go to the Next.js route handler on localhost:3001, NOT directly to NestJS
+// This way cookies from localhost:3001 are automatically included
 // ============================================================
 
 import type {
@@ -22,13 +22,11 @@ import type {
   ProductUpdatePayload,
 } from './types';
 
-const API_URL = process.env.BACKEND_URL || 'http://localhost:3000';
-
 async function apiFetch<T>(
-  endpoint: string,
+  path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_URL}${endpoint}`;
+  const url = path;
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -39,7 +37,7 @@ async function apiFetch<T>(
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({
-      message: `Backend error: ${res.status}`,
+      message: `API error: ${res.status}`,
     }));
     throw new Error(error.message || `HTTP ${res.status}`);
   }
@@ -58,19 +56,19 @@ export async function getProducts(
   if (filters.sort) params.set('sort', filters.sort);
 
   const query = params.toString();
-  return apiFetch<ProductsResponse>(`/products${query ? `?${query}` : ''}`);
+  return apiFetch<ProductsResponse>(`/api/products${query ? `?${query}` : ''}`);
 }
 
 export async function getProductById(
   id: number
 ): Promise<ProductByIdResponse> {
-  return apiFetch<ProductByIdResponse>(`/products/${id}`);
+  return apiFetch<ProductByIdResponse>(`/api/products/${id}`);
 }
 
 export async function createProduct(
   data: ProductMutationPayload
 ): Promise<ProductByIdResponse> {
-  return apiFetch<ProductByIdResponse>('/products', {
+  return apiFetch<ProductByIdResponse>('/api/products', {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -80,7 +78,7 @@ export async function updateProduct(
   id: number,
   data: ProductUpdatePayload
 ): Promise<ProductByIdResponse> {
-  return apiFetch<ProductByIdResponse>(`/products/${id}`, {
+  return apiFetch<ProductByIdResponse>(`/api/products/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
@@ -89,7 +87,7 @@ export async function updateProduct(
 export async function deleteProduct(
   id: number
 ): Promise<{ success: boolean; message: string }> {
-  return apiFetch<{ success: boolean; message: string }>(`/products/${id}`, {
+  return apiFetch<{ success: boolean; message: string }>(`/api/products/${id}`, {
     method: 'DELETE',
   });
 }

@@ -3,13 +3,21 @@
 // ============================================================
 // BFF Pattern: Proxies requests to NestJS backend.
 //
-// NestJS backend: http://localhost:3001 (or BACKEND_URL env)
+// NEXT_PUBLIC_BACKEND_URL = http://localhost:3000/api (includes /api prefix)
+// Route handler path: /api/products → proxies to NestJS /api/products
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 const BACKEND_URL =
-  process.env.BACKEND_URL || 'http://localhost:3001';
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
+
+async function getAccessTokenFromCookies(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const accessTokenCookie = cookieStore.get('access_token');
+  return accessTokenCookie?.value || null;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -29,23 +37,31 @@ export async function GET(request: NextRequest) {
 
   const query = params.toString();
 
+  const accessToken = await getAccessTokenFromCookies();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   try {
     const res = await fetch(`${BACKEND_URL}/products${query ? `?${query}` : ''}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: 'GET',
+      headers,
     });
 
     if (!res.ok) {
+      const errorBody = await res.text();
       return NextResponse.json(
-        { success: false, message: `Backend error: ${res.status}` },
+        { success: false, message: `Backend error: ${res.status}`, detail: errorBody },
         { status: res.status }
       );
     }
 
     const data = await res.json();
 
-    // Transform backend response to frontend contract
     return NextResponse.json({
       success: true,
       time: new Date().toISOString(),
@@ -65,14 +81,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
+  const body = await request.json();
 
+  const accessToken = await getAccessTokenFromCookies();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  try {
     const res = await fetch(`${BACKEND_URL}/products`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
     });
 

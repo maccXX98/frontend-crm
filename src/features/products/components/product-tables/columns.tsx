@@ -8,6 +8,12 @@ import Image from 'next/image';
 import { CellAction } from './cell-action';
 import { CATEGORY_OPTIONS } from './options';
 
+function isValidImageUrl(url: string): boolean {
+  if (!url) return false;
+  // Check if it's a valid URL (starts with http:// or https://)
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 export const columns: ColumnDef<ProductEntity>[] = [
   {
     id: 'Image',
@@ -16,9 +22,11 @@ export const columns: ColumnDef<ProductEntity>[] = [
     cell: ({ row }) => {
       const imageUrl = row.getValue('Image') as string;
       const name = row.getValue('Name') as string;
-      return (
-        <div className='relative aspect-square'>
-          {imageUrl ? (
+      
+      // Check if URL is valid for next/image
+      if (imageUrl && isValidImageUrl(imageUrl)) {
+        return (
+          <div className='relative aspect-square'>
             <Image
               src={imageUrl}
               alt={name}
@@ -26,11 +34,14 @@ export const columns: ColumnDef<ProductEntity>[] = [
               sizes='80px'
               className='rounded-lg object-cover'
             />
-          ) : (
-            <div className='flex h-full w-full items-center justify-center rounded-lg bg-muted'>
-              <Icons.image className='h-8 w-8 text-muted-foreground' />
-            </div>
-          )}
+          </div>
+        );
+      }
+      
+      // Show placeholder for invalid/missing URLs
+      return (
+        <div className='flex h-full w-full items-center justify-center rounded-lg bg-muted'>
+          <Icons.media className='h-8 w-8 text-muted-foreground' />
         </div>
       );
     },
@@ -103,10 +114,11 @@ export const columns: ColumnDef<ProductEntity>[] = [
   },
   {
     id: 'sellingPrice',
-    accessorKey: 'productPrices',
     header: 'PRICE',
     cell: ({ row }) => {
-      const prices = row.getValue('productPrices') as ProductEntity['productPrices'];
+      // Access from row.original since productPrices is a nested relation
+      const product = row.original;
+      const prices = product.productPrices;
       if (!prices || prices.length === 0) {
         return <span className='text-muted-foreground'>-</span>;
       }

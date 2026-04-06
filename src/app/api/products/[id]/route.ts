@@ -3,22 +3,39 @@
 // ============================================================
 // BFF Pattern: Proxies requests to NestJS backend.
 //
-// NestJS backend: http://localhost:3001 (or BACKEND_URL env)
+// NEXT_PUBLIC_BACKEND_URL = http://localhost:3000/api (includes /api prefix)
+// Route handler path: /api/products/[id] → proxies to NestJS /api/products/:id
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 const BACKEND_URL =
-  process.env.BACKEND_URL || 'http://localhost:3001';
+  process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
 
 type Params = { params: Promise<{ id: string }> };
+
+async function getAccessTokenFromCookies(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const accessTokenCookie = cookieStore.get('access_token');
+  return accessTokenCookie?.value || null;
+}
 
 export async function GET(request: NextRequest, { params }: Params) {
   const { id } = await params;
 
+  const accessToken = await getAccessTokenFromCookies();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   try {
     const res = await fetch(`${BACKEND_URL}/products/${id}`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers,
     });
 
     if (!res.ok) {
@@ -47,13 +64,21 @@ export async function GET(request: NextRequest, { params }: Params) {
 
 export async function PUT(request: NextRequest, { params }: Params) {
   const { id } = await params;
+  const body = await request.json();
+
+  const accessToken = await getAccessTokenFromCookies();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
 
   try {
-    const body = await request.json();
-
     const res = await fetch(`${BACKEND_URL}/products/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     });
 
@@ -84,10 +109,19 @@ export async function PUT(request: NextRequest, { params }: Params) {
 export async function DELETE(request: NextRequest, { params }: Params) {
   const { id } = await params;
 
+  const accessToken = await getAccessTokenFromCookies();
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
   try {
     const res = await fetch(`${BACKEND_URL}/products/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
     });
 
     if (!res.ok) {

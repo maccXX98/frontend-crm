@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/stores/auth-store';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// Backend URL - NEXT_PUBLIC_BACKEND_URL already includes /api prefix
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
 
 interface ApiClientOptions extends RequestInit {
   skipAuth?: boolean;

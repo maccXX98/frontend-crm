@@ -21,10 +21,12 @@ const DEFAULT_CURRENCY_OPTIONS = [
 async function getDistributorOptions() {
   try {
     // Use apiClient to call internal route handler which proxies to NestJS
+    // Note: apiClient prepends BASE_URL which already includes /api
+    // So pass just /distributors → maps to /api/distributors route handler
     const res = await apiClient<{
       success: boolean;
       distributors: Array<{ DistributorID: number; Name: string }>;
-    }>('/api/distributors');
+    }>('/distributors');
     if (res.distributors && Array.isArray(res.distributors)) {
       return res.distributors.map((d) => ({
         value: d.DistributorID,
@@ -42,7 +44,7 @@ async function getCategoryOptions() {
     const res = await apiClient<{
       success: boolean;
       categories: Array<{ CategoryID: number; Name: string }>;
-    }>('/api/categories');
+    }>('/categories');
     if (res.categories && Array.isArray(res.categories)) {
       return res.categories.map((c) => ({
         value: c.CategoryID,
