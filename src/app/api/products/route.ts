@@ -1,22 +1,15 @@
 // ============================================================
 // Route Handler — Products (list + create)
 // ============================================================
-// Used with Pattern 2 (Route Handlers + ORM) or Pattern 3 (BFF).
+// BFF Pattern: Proxies requests to NestJS backend.
 //
-// Fullstack (ORM): Replace fakeProducts calls with your ORM
-//   const products = await db.query.products.findMany({ ... })
-//
-// BFF (proxy): Replace with fetch to your external backend
-//   const res = await fetch(`${BACKEND_URL}/products?${searchParams}`, {
-//     headers: { Authorization: `Bearer ${token}` }
-//   })
-//   return NextResponse.json(await res.json())
-//
-// Current: Mock (in-memory fake data for demo/prototyping)
+// NestJS backend: http://localhost:3001 (or BACKEND_URL env)
 // ============================================================
 
-import { fakeProducts } from '@/constants/mock-api';
 import { NextRequest, NextResponse } from 'next/server';
+
+const BACKEND_URL =
+  process.env.BACKEND_URL || 'http://localhost:3001';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -27,19 +20,85 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search') ?? undefined;
   const sort = searchParams.get('sort') ?? undefined;
 
-  const data = await fakeProducts.getProducts({
-    page,
-    limit,
-    categories,
-    search,
-    sort
-  });
+  const params = new URLSearchParams();
+  if (page) params.set('page', String(page));
+  if (limit) params.set('limit', String(limit));
+  if (categories) params.set('categories', categories);
+  if (search) params.set('search', search);
+  if (sort) params.set('sort', sort);
 
-  return NextResponse.json(data);
+  const query = params.toString();
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/products${query ? `?${query}` : ''}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { success: false, message: `Backend error: ${res.status}` },
+        { status: res.status }
+      );
+    }
+
+    const data = await res.json();
+
+    // Transform backend response to frontend contract
+    return NextResponse.json({
+      success: true,
+      time: new Date().toISOString(),
+      message: 'Products fetched successfully',
+      total_products: Array.isArray(data) ? data.length : 0,
+      offset: (page - 1) * limit,
+      limit,
+      products: Array.isArray(data) ? data : [],
+    });
+  } catch (error) {
+    console.error('[Products API] GET /products error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to fetch products' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const data = await fakeProducts.createProduct(body);
-  return NextResponse.json(data, { status: 201 });
+  try {
+    const body = await request.json();
+
+    const res = await fetch(`${BACKEND_URL}/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { success: false, message: `Backend error: ${res.status}` },
+        { status: res.status }
+      );
+    }
+
+    const data = await res.json();
+
+    return NextResponse.json(
+      {
+        success: true,
+        time: new Date().toISOString(),
+        message: 'Product created successfully',
+        product: data,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('[Products API] POST /products error:', error);
+    return NextResponse.json(
+      { success: false, message: 'Failed to create product' },
+      { status: 500 }
+    );
+  }
 }

@@ -6,10 +6,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { deleteProductMutation } from '../../api/mutations';
-import type { Product } from '../../api/types';
+import type { ProductEntity } from '../../api/types';
 import { Icons } from '@/components/icons';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -17,7 +17,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 interface CellActionProps {
-  data: Product;
+  data: ProductEntity;
 }
 
 export function CellAction({ data }: CellActionProps) {
@@ -32,7 +32,7 @@ export function CellAction({ data }: CellActionProps) {
     },
     onError: () => {
       toast.error('Failed to delete product');
-    }
+    },
   });
 
   return (
@@ -40,7 +40,7 @@ export function CellAction({ data }: CellActionProps) {
       <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
-        onConfirm={() => deleteMutation.mutate(data.id)}
+        onConfirm={() => deleteMutation.mutate(data.ProductID)}
         loading={deleteMutation.isPending}
       />
       <DropdownMenu modal={false}>
@@ -52,7 +52,7 @@ export function CellAction({ data }: CellActionProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => router.push(`/dashboard/product/${data.id}`)}>
+          <DropdownMenuItem onClick={() => router.push(`/dashboard/product/${data.ProductID}`)}>
             <Icons.edit className='mr-2 h-4 w-4' /> Update
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
