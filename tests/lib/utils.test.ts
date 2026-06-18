@@ -80,16 +80,20 @@ describe('formatBytes', () => {
     expect(formatBytes(1024 ** 4)).toBe('1 TB');
   });
 
-  it('should clamp i at sizes.length - 1 for very large values (1024^5 → "1024 TB")', () => {
-    // For 1024^5: Math.log(1024^5)/Math.log(1024) = 5, i = 5
-    // sizes[5] is undefined so fallback to 'Bytes' → value/1 * toFixed(0) = '1073741824'
-    // Actually looking at the code: sizes[5] ?? 'Bytes' = 'Bytes'
-    // 1024^5 / 1024^5 = 1 → '1 Bytes'
-    // Let me just verify what actually happens
-    const result = formatBytes(1024 ** 5);
-    // i=5, sizes[5] is undefined → falls back to 'Bytes'
-    // value = 1024^5 / 1024^5 = 1 → '1 Bytes'
-    expect(result).toBe('1 Bytes');
+  it('should clamp i at sizes.length - 1 for 1024^5 (1 PB equivalent) → "1024 TB"', () => {
+    // 1024^5 = 1.125e15; Math.log(1024^5)/Math.log(1024) ≈ 5
+    // i is clamped to sizes.length - 1 = 4 → sizes[4] = 'TB'
+    // value = 1024^5 / 1024^4 = 1024 → '1024 TB'
+    expect(formatBytes(1024 ** 5)).toBe('1024 TB');
+  });
+
+  it('should clamp i at sizes.length - 1 for 1024^5 with accurate → "1024 TiB"', () => {
+    expect(formatBytes(1024 ** 5, { sizeType: 'accurate' })).toBe('1024 TiB');
+  });
+
+  it('should clamp i at sizes.length - 1 for 1024^6 → "1048576 TB" (sensible large value)', () => {
+    // 1024^6 / 1024^4 = 1024^2 = 1048576
+    expect(formatBytes(1024 ** 6)).toBe('1048576 TB');
   });
 
   it('should return "2 KB" for 1536 bytes with default decimals=0 (rounds up)', () => {

@@ -259,25 +259,41 @@ describe('profileSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('null → success (coerced to 0, which is a valid number)', () => {
+    it('null → failure "Contact number must be a positive number" (null coerces to 0)', () => {
       const result = profileSchema.safeParse({
         firstname: 'John',
         lastname: 'Doe',
         email: 'john@example.com',
-        // @ts-expect-error testing null
+        // @ts-expect-error testing invalid null input
         contactno: null,
         country: 'USA',
         city: 'NYC',
         jobs: [],
       });
-      // Number(null) === 0 in JavaScript, so z.coerce.number() accepts null
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.contactno).toBe(0);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Contact number must be a positive number');
       }
     });
 
-    it('0 → success (0 is a valid number)', () => {
+    it('"" (empty string) → failure "Contact number must be a positive number" (coerces to 0)', () => {
+      const result = profileSchema.safeParse({
+        firstname: 'John',
+        lastname: 'Doe',
+        email: 'john@example.com',
+        // @ts-expect-error testing invalid empty string input
+        contactno: '',
+        country: 'USA',
+        city: 'NYC',
+        jobs: [],
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Contact number must be a positive number');
+      }
+    });
+
+    it('0 → failure "Contact number must be a positive number"', () => {
       const result = profileSchema.safeParse({
         firstname: 'John',
         lastname: 'Doe',
@@ -287,7 +303,26 @@ describe('profileSchema', () => {
         city: 'NYC',
         jobs: [],
       });
-      expect(result.success).toBe(true);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Contact number must be a positive number');
+      }
+    });
+
+    it('-5 → failure "Contact number must be a positive number"', () => {
+      const result = profileSchema.safeParse({
+        firstname: 'John',
+        lastname: 'Doe',
+        email: 'john@example.com',
+        contactno: -5,
+        country: 'USA',
+        city: 'NYC',
+        jobs: [],
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Contact number must be a positive number');
+      }
     });
 
     it('Float "123.45" → success, coerced to 123.45', () => {
