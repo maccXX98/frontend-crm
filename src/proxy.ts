@@ -57,7 +57,7 @@ function isTokenExpired(token: string): boolean {
   return Date.now() >= expirationTime;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (shouldSkipMiddleware(pathname)) {
