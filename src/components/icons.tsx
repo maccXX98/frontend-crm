@@ -50,6 +50,7 @@ import {
   IconLayoutSidebar,
   IconLoader2,
   IconLock,
+  IconMapPin,
   IconLogin,
   IconLogout,
   IconMessage,
@@ -204,6 +205,9 @@ export const Icons = {
   italic: IconItalic,
   underline: IconUnderline,
   text: IconTypography,
+
+  // Location
+  mapPin: IconMapPin,
 
   // Misc
   pizza: IconPizza,

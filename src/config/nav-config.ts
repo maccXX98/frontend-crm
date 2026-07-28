@@ -91,6 +91,14 @@ export const navGroups: NavGroup[] = [
         shortcut: ['c', 'c'],
         isActive: false,
         items: []
+      },
+      {
+        title: 'Chatbot Simulator',
+        url: '/dashboard/chatbot-simulator',
+        icon: 'sparkles',
+        shortcut: ['b', 'b'],
+        isActive: false,
+        items: []
       }
     ]
   },
