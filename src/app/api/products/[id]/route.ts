@@ -62,7 +62,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function updateProductHandler(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await request.json();
 
@@ -105,6 +105,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
     );
   }
 }
+
+export const PUT = updateProductHandler;
+export const PATCH = updateProductHandler;
 
 export async function DELETE(request: NextRequest, { params }: Params) {
   const { id } = await params;

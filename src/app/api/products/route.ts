@@ -62,14 +62,17 @@ export async function GET(request: NextRequest) {
 
     const data = await res.json();
 
+    const products = data.items ?? (Array.isArray(data) ? data : []);
+    const total_products = data.total_items ?? (Array.isArray(data) ? data.length : 0);
+
     return NextResponse.json({
       success: true,
       time: new Date().toISOString(),
       message: 'Products fetched successfully',
-      total_products: Array.isArray(data) ? data.length : 0,
+      total_products,
       offset: (page - 1) * limit,
       limit,
-      products: Array.isArray(data) ? data : [],
+      products,
     });
   } catch (error) {
     console.error('[Products API] GET /products error:', error);

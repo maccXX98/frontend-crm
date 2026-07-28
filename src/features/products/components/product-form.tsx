@@ -10,6 +10,9 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { productSchema, type ProductFormValues } from '@/features/products/schemas/product';
 
+import { useRef } from 'react';
+import type { ProductEntity, ProductMutationPayload } from '../api/types';
+
 interface ProductFormProps {
   initialData: ProductEntity | null;
   pageTitle: string;
@@ -27,10 +30,32 @@ export default function ProductForm({
 }: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
+  const pendingImageRef = useRef<File | null>(null);
+
+  const handleImageUpload = async (productId: number, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`/api/products/${productId}/images`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        console.error('[ProductForm] Image upload returned error status:', res.status);
+      }
+    } catch (err) {
+      console.error('[ProductForm] Image upload error:', err);
+    }
+  };
 
   const createMutation = useMutation({
     ...createProductMutation,
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const productId = res?.product?.ProductID;
+      if (productId && pendingImageRef.current) {
+        toast.info('Uploading product image...');
+        await handleImageUpload(productId, pendingImageRef.current);
+      }
       toast.success('Product created successfully');
       router.push('/dashboard/product');
     },
@@ -41,7 +66,12 @@ export default function ProductForm({
 
   const updateMutation = useMutation({
     ...updateProductMutation,
-    onSuccess: () => {
+    onSuccess: async (res) => {
+      const productId = initialData?.ProductID || res?.product?.ProductID;
+      if (productId && pendingImageRef.current) {
+        toast.info('Uploading product image...');
+        await handleImageUpload(productId, pendingImageRef.current);
+      }
       toast.success('Product updated successfully');
       router.push('/dashboard/product');
     },
@@ -63,7 +93,7 @@ export default function ProductForm({
 
   const getDefaultCurrency = (): string | undefined => {
     // Get currency from first price if available
-    return initialData?.productPrices?.[0]?.Currency;
+    return initialData?.productPrices?.[0]?.Currency || 'BOB';
   };
 
   const form = useAppForm({
@@ -75,33 +105,77 @@ export default function ProductForm({
       template: initialData?.Template ?? '',
       distributorId: getDefaultDistributorId(),
       categoryIds: getDefaultCategoryIds(),
-      cost: initialData?.productPrices?.[0]?.Cost,
-      sellingPrice: initialData?.productPrices?.[0]?.SellingPrice,
+      cost: initialData?.productPrices?.[0]?.Cost ? Number(initialData.productPrices[0].Cost) : undefined,
+      sellingPrice: initialData?.productPrices?.[0]?.SellingPrice ? Number(initialData.productPrices[0].SellingPrice) : undefined,
       currency: getDefaultCurrency(),
     } as ProductFormValues,
     validators: {
-      onSubmit: productSchema,
+      onSubmit: ({ value }) => {
+        const processed = {
+          ...value,
+          distributorId:
+            typeof value.distributorId === 'string' && value.distributorId !== ''
+              ? Number(value.distributorId)
+              : value.distributorId,
+          categoryIds:
+            typeof value.categoryIds === 'string'
+              ? [Number(value.categoryIds)]
+              : Array.isArray(value.categoryIds)
+              ? value.categoryIds.map(Number)
+              : value.categoryIds,
+          cost:
+            typeof value.cost === 'string' && value.cost !== ''
+              ? Number(value.cost)
+              : value.cost,
+          sellingPrice:
+            typeof value.sellingPrice === 'string' && value.sellingPrice !== ''
+              ? Number(value.sellingPrice)
+              : value.sellingPrice,
+        };
+        const res = productSchema.safeParse(processed);
+        if (!res.success) {
+          const errors: Record<string, string> = {};
+          for (const issue of res.error.issues) {
+            const path = issue.path[0];
+            if (typeof path === 'string') {
+              errors[path] = issue.message;
+            }
+          }
+          return errors;
+        }
+        return null;
+      },
     },
     onSubmit: ({ value }) => {
-      // Build mutation payload matching backend DTO
-      const payload = {
-        name: value.name,
-        nickname: value.nickname,
-        description: value.description,
-        template: value.template,
-        distributorId: value.distributorId!,
-        categoryIds: value.categoryIds,
-        // Price creation handled separately or as part of product
-        cost: value.cost,
-        sellingPrice: value.sellingPrice,
-        currency: value.currency,
+      if (value.image?.[0] instanceof File) {
+        pendingImageRef.current = value.image[0];
+      } else {
+        pendingImageRef.current = null;
+      }
+
+      const catId = value.categoryIds
+        ? Array.isArray(value.categoryIds)
+          ? value.categoryIds.map(Number)
+          : [Number(value.categoryIds)]
+        : undefined;
+
+      // Build mutation payload matching backend DTO (PascalCase)
+      const payload: ProductMutationPayload = {
+        Name: value.name,
+        NickName: value.nickname || undefined,
+        Description: value.description,
+        Template: value.template || undefined,
+        DistributorID: Number(value.distributorId),
+        CategoryID: catId,
+        Cost: value.cost !== undefined && value.cost !== null && String(value.cost) !== '' ? Number(value.cost) : undefined,
+        SellingPrice: value.sellingPrice !== undefined && value.sellingPrice !== null && String(value.sellingPrice) !== '' ? Number(value.sellingPrice) : undefined,
+        Currency: value.currency || 'BOB',
       };
 
       if (isEdit && initialData) {
         updateMutation.mutate({ id: initialData.ProductID, values: payload });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        createMutation.mutate(payload as any);
+        createMutation.mutate(payload);
       }
     },
   });
@@ -111,9 +185,17 @@ export default function ProductForm({
     FormSelectField,
     FormTextareaField,
     FormFileUploadField,
-    FormNumberField,
-    FormComboboxField,
   } = useFormFields<ProductFormValues>();
+
+  const distSelectOptions = distributorOptions.map((d) => ({
+    value: String(d.value),
+    label: d.label,
+  }));
+
+  const catSelectOptions = categoryOptions.map((c) => ({
+    value: String(c.value),
+    label: c.label,
+  }));
 
   return (
     <Card className='mx-auto w-full'>
@@ -148,42 +230,34 @@ export default function ProductForm({
                 placeholder='Enter nickname (optional)'
               />
 
-              <FormComboboxField
+              <FormSelectField
                 name='distributorId'
                 label='Distributor'
                 required
-                options={distributorOptions}
+                options={distSelectOptions}
                 placeholder='Select distributor'
-                validators={{
-                  onBlur: z.number({ message: 'Distributor is required' }),
-                }}
               />
 
-              <FormComboboxField
+              <FormSelectField
                 name='categoryIds'
-                label='Categories'
-                options={categoryOptions}
-                placeholder='Select categories (optional)'
-                multiple
+                label='Category'
+                options={catSelectOptions}
+                placeholder='Select category (optional)'
               />
             </div>
 
             <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-              <FormNumberField
+              <FormTextField
                 name='cost'
                 label='Cost'
                 type='number'
-                min={0}
-                step={0.01}
                 placeholder='Enter cost'
               />
 
-              <FormNumberField
+              <FormTextField
                 name='sellingPrice'
                 label='Selling Price'
                 type='number'
-                min={0}
-                step={0.01}
                 placeholder='Enter selling price'
               />
 

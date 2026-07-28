@@ -34,6 +34,7 @@ export function OrgSwitcher() {
         >
           <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg'>
             {displayOrganization.hasImage && displayOrganization.imageUrl ? (
+              // oxlint-disable-next-line
               <img
                 src={displayOrganization.imageUrl}
                 alt={displayOrganization.name}

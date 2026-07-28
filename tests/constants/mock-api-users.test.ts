@@ -30,7 +30,7 @@ describe('mock-api-users', () => {
     });
 
     it('should generate users with IDs 1-50', () => {
-      const ids = fakeUsers.records.map((u) => u.id).sort((a, b) => a - b);
+      const ids = fakeUsers.records.map((u) => u.id).toSorted((a, b) => a - b);
       expect(ids).toEqual(
         Array.from({ length: 50 }, (_, i) => i + 1)
       );
@@ -276,7 +276,7 @@ describe('mock-api-users', () => {
       const result = await promise;
 
       const firstNames = result.users.map((u) => u.first_name.toLowerCase());
-      const sortedFirstNames = [...firstNames].sort();
+      const sortedFirstNames = [...firstNames].toSorted();
       expect(firstNames).toEqual(sortedFirstNames);
     });
 
@@ -344,7 +344,7 @@ describe('mock-api-users', () => {
       const result = await promise;
 
       const fullNames = result.users.map((u) => `${u.first_name} ${u.last_name}`.toLowerCase());
-      const sortedFullNames = [...fullNames].sort();
+      const sortedFullNames = [...fullNames].toSorted();
       expect(fullNames).toEqual(sortedFullNames);
     });
 

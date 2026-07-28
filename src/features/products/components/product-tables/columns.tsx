@@ -10,8 +10,7 @@ import { CATEGORY_OPTIONS } from './options';
 
 function isValidImageUrl(url: string): boolean {
   if (!url) return false;
-  // Check if it's a valid URL (starts with http:// or https://)
-  return url.startsWith('http://') || url.startsWith('https://');
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
 }
 
 export const columns: ColumnDef<ProductEntity>[] = [
@@ -20,28 +19,36 @@ export const columns: ColumnDef<ProductEntity>[] = [
     accessorKey: 'Image',
     header: 'IMAGE',
     cell: ({ row }) => {
-      const imageUrl = row.getValue('Image') as string;
-      const name = row.getValue('Name') as string;
-      
-      // Check if URL is valid for next/image
-      if (imageUrl && isValidImageUrl(imageUrl)) {
-        return (
-          <div className='relative aspect-square'>
-            <Image
-              src={imageUrl}
-              alt={name}
-              fill
-              sizes='80px'
-              className='rounded-lg object-cover'
-            />
-          </div>
-        );
+      const product = row.original;
+      let imageUrl = product.Image;
+      if (product.productImages && product.productImages.length > 0) {
+        const img = product.productImages[0];
+        imageUrl = img.webPath || img.thumbPath || img.originalPath || imageUrl;
       }
-      
-      // Show placeholder for invalid/missing URLs
+      const name = product.Name;
+
+      if (imageUrl) {
+        let fullUrl = imageUrl;
+        if (imageUrl.startsWith('/uploads') || imageUrl.startsWith('uploads')) {
+          fullUrl = `http://localhost:3000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+        }
+        if (isValidImageUrl(fullUrl)) {
+          return (
+            <div className='relative h-10 w-10 overflow-hidden rounded-lg'>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={fullUrl}
+                alt={name}
+                className='h-full w-full object-cover'
+              />
+            </div>
+          );
+        }
+      }
+
       return (
-        <div className='flex h-full w-full items-center justify-center rounded-lg bg-muted'>
-          <Icons.media className='h-8 w-8 text-muted-foreground' />
+        <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-muted'>
+          <Icons.media className='h-5 w-5 text-muted-foreground' />
         </div>
       );
     },
@@ -126,7 +133,7 @@ export const columns: ColumnDef<ProductEntity>[] = [
       const currency = latestPrice.Currency || 'USD';
       return (
         <span>
-          {currency} {latestPrice.SellingPrice.toFixed(2)}
+          {currency} {Number(latestPrice.SellingPrice).toFixed(2)}
         </span>
       );
     },

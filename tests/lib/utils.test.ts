@@ -15,7 +15,8 @@ describe('cn', () => {
   });
 
   it('should drop falsy values (false && "bar")', () => {
-    expect(cn('foo', false && 'bar')).toBe('foo');
+    // oxlint-disable-next-line
+    expect(cn('foo', (false as boolean) && 'bar')).toBe('foo');
   });
 
   it('should drop null and undefined from inputs', () => {

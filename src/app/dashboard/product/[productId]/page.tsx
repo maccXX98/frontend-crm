@@ -3,7 +3,7 @@ import { getQueryClient } from '@/lib/query-client';
 import { productByIdOptions } from '@/features/products/api/queries';
 import PageContainer from '@/components/layout/page-container';
 import ProductViewPage from '@/features/products/components/product-view-page';
-import { apiClient } from '@/lib/api-client';
+import { cookies } from 'next/headers';
 
 export const metadata = {
   title: 'Dashboard : Product View',
@@ -11,48 +11,58 @@ export const metadata = {
 
 type PageProps = { params: Promise<{ productId: string }> };
 
-// Default options for standalone usage
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api';
+
+// Default currency options
 const DEFAULT_CURRENCY_OPTIONS = [
-  { value: 'USD', label: 'USD' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'GBP', label: 'GBP' },
+  { value: 'BOB', label: 'BOB (Bs.)' },
+  { value: 'USD', label: 'USD ($)' },
 ];
 
 async function getDistributorOptions() {
   try {
-    // Use apiClient to call internal route handler which proxies to NestJS
-    // Note: apiClient prepends BASE_URL which already includes /api
-    // So pass just /distributors → maps to /api/distributors route handler
-    const res = await apiClient<{
-      success: boolean;
-      distributors: Array<{ DistributorID: number; Name: string }>;
-    }>('/distributors');
-    if (res.distributors && Array.isArray(res.distributors)) {
-      return res.distributors.map((d) => ({
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+    const res = await fetch(`${BACKEND_URL}/distributors`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : data.distributors ?? [];
+      return list.map((d: { DistributorID: number; Name: string }) => ({
         value: d.DistributorID,
         label: d.Name,
       }));
     }
-  } catch {
-    console.warn('[ProductPage] Failed to fetch distributors');
+  } catch (err) {
+    console.warn('[ProductPage] Failed to fetch distributors', err);
   }
   return [];
 }
 
 async function getCategoryOptions() {
   try {
-    const res = await apiClient<{
-      success: boolean;
-      categories: Array<{ CategoryID: number; Name: string }>;
-    }>('/categories');
-    if (res.categories && Array.isArray(res.categories)) {
-      return res.categories.map((c) => ({
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+    const res = await fetch(`${BACKEND_URL}/categories`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : data.categories ?? [];
+      return list.map((c: { CategoryID: number; Name: string }) => ({
         value: c.CategoryID,
         label: c.Name,
       }));
     }
-  } catch {
-    console.warn('[ProductPage] Failed to fetch categories');
+  } catch (err) {
+    console.warn('[ProductPage] Failed to fetch categories', err);
   }
   return [];
 }

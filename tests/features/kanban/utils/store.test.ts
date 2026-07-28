@@ -15,7 +15,7 @@ describe('kanban store', () => {
   describe('initial state', () => {
     it('has 3 columns: backlog, inProgress, done', () => {
       const { columns } = useTaskStore.getState();
-      const keys = Object.keys(columns).sort();
+      const keys = Object.keys(columns).toSorted();
       expect(keys).toEqual(['backlog', 'done', 'inProgress']);
     });
 

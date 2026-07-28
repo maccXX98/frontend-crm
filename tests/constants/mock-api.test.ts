@@ -30,7 +30,7 @@ describe('mock-api', () => {
     });
 
     it('should generate products with IDs 1-20', () => {
-      const ids = fakeProducts.records.map((p) => p.id).sort((a, b) => a - b);
+      const ids = fakeProducts.records.map((p) => p.id).toSorted((a, b) => a - b);
       expect(ids).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
     });
 
@@ -223,7 +223,7 @@ describe('mock-api', () => {
       const result = await promise;
 
       const prices = result.products.map((p) => p.price);
-      const sortedPrices = [...prices].sort((a, b) => b - a);
+      const sortedPrices = [...prices].toSorted((a, b) => b - a);
       expect(prices).toEqual(sortedPrices);
     });
 
@@ -240,7 +240,7 @@ describe('mock-api', () => {
       const result = await promise;
 
       const names = result.products.map((p) => p.name.toLowerCase());
-      const sortedNames = [...names].sort();
+      const sortedNames = [...names].toSorted();
       expect(names).toEqual(sortedNames);
     });
 

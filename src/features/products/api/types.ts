@@ -112,16 +112,16 @@ export type ProductByIdResponse = {
 // =========================================
 
 export type ProductMutationPayload = {
-  name: string;
-  nickname?: string;
-  description: string;
-  template?: string;
-  image?: string;
-  distributorId: number;
-  categoryIds?: number[];
-  cost?: number;
-  sellingPrice?: number;
-  currency?: string;
+  Name: string;
+  NickName?: string;
+  Description: string;
+  Template?: string;
+  Image?: string;
+  DistributorID: number;
+  CategoryID?: number[];
+  Cost?: number;
+  SellingPrice?: number;
+  Currency?: string;
 };
 
 export type ProductUpdatePayload = Partial<ProductMutationPayload>;
