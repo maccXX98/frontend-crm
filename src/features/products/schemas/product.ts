@@ -1,7 +1,7 @@
 import * as z from 'zod';
 
-const MAX_FILE_SIZE = 5_000_000;
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB — matches backend's MulterModule limit (was) and is conservative for browser upload
+export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'] as const;
 
 // ============================================================
 // Product Form Schema — Backend-Aligned

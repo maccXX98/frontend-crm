@@ -91,3 +91,12 @@ export async function deleteProduct(
     method: 'DELETE',
   });
 }
+
+export async function deleteProductImage(
+  imageId: number
+): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>(
+    `/api/product-images/${imageId}`,
+    { method: 'DELETE' }
+  );
+}

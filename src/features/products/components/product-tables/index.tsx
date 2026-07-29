@@ -16,7 +16,7 @@ export function ProductTable() {
     page: parseAsInteger.withDefault(1),
     perPage: parseAsInteger.withDefault(10),
     name: parseAsString,
-    category: parseAsString,
+    categories: parseAsString,
     sort: getSortingStateParser(columnIds).withDefault([])
   });
 
@@ -24,7 +24,7 @@ export function ProductTable() {
     page: params.page,
     limit: params.perPage,
     ...(params.name && { search: params.name }),
-    ...(params.category && { categories: params.category }),
+    ...(params.categories && { categories: params.categories }),
     ...(params.sort.length > 0 && { sort: JSON.stringify(params.sort) })
   };
 

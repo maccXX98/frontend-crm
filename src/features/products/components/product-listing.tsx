@@ -8,7 +8,7 @@ export default function ProductListingPage() {
   const page = searchParamsCache.get('page');
   const search = searchParamsCache.get('name');
   const pageLimit = searchParamsCache.get('perPage');
-  const categories = searchParamsCache.get('category');
+  const categories = searchParamsCache.get('categories');
   const sort = searchParamsCache.get('sort');
 
   const filters = {

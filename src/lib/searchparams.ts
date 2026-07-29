@@ -10,7 +10,7 @@ export const searchParams = {
   perPage: parseAsInteger.withDefault(10),
   name: parseAsString,
   gender: parseAsString,
-  category: parseAsString,
+  categories: parseAsString,
   role: parseAsString,
   sort: parseAsString
   // advanced filter

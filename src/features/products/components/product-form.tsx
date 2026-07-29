@@ -3,12 +3,13 @@ import { useAppForm, useFormFields } from '@/components/ui/tanstack-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createProductMutation, updateProductMutation } from '../api/mutations';
+import { deleteProductImage } from '../api/service';
 import type { ProductEntity } from '../api/types';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { productSchema, type ProductFormValues } from '@/features/products/schemas/product';
+import { productSchema, type ProductFormValues, MAX_FILE_SIZE } from '@/features/products/schemas/product';
 
 import { useRef } from 'react';
 import type { ProductEntity, ProductMutationPayload } from '../api/types';
@@ -41,10 +42,11 @@ export default function ProductForm({
         body: formData,
       });
       if (!res.ok) {
-        console.error('[ProductForm] Image upload returned error status:', res.status);
+        throw new Error(`Image upload failed: ${res.status}`);
       }
+      toast.success('Image uploaded');
     } catch (err) {
-      console.error('[ProductForm] Image upload error:', err);
+      toast.error(err instanceof Error ? err.message : 'Image upload failed');
     }
   };
 
@@ -70,6 +72,15 @@ export default function ProductForm({
       const productId = initialData?.ProductID || res?.product?.ProductID;
       if (productId && pendingImageRef.current) {
         toast.info('Uploading product image...');
+        if (isEdit && initialData?.productImages?.length) {
+          for (const img of initialData.productImages) {
+            try {
+              await deleteProductImage(img.ProductImageID);
+            } catch (err) {
+              console.warn('[ProductForm] Failed to delete old image', err);
+            }
+          }
+        }
         await handleImageUpload(productId, pendingImageRef.current);
       }
       toast.success('Product updated successfully');
@@ -209,7 +220,7 @@ export default function ProductForm({
               name='image'
               label='Product Image'
               description='Upload a product image (optional)'
-              maxSize={5 * 1024 * 1024}
+              maxSize={MAX_FILE_SIZE}
               maxFiles={1}
             />
 
