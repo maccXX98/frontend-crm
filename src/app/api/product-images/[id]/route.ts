@@ -16,9 +16,8 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   const { id } = await params;
   const accessToken = await getAccessTokenFromCookies();
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  // Don't set Content-Type on DELETE — backend's JSON parser rejects empty bodies with 400.
+  const headers: Record<string, string> = {};
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }

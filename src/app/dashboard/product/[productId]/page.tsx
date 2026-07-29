@@ -1,4 +1,5 @@
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
+import { cookies } from 'next/headers';
 import { getQueryClient } from '@/lib/query-client';
 import { productByIdOptions } from '@/features/products/api/queries';
 import PageContainer from '@/components/layout/page-container';
@@ -19,7 +20,10 @@ const DEFAULT_CURRENCY_OPTIONS = [
 
 async function getDistributorOptions() {
   try {
-    const res = await fetch(`${BFF_BASE}/api/distributors`);
+    const cookieStore = await cookies();
+    const res = await fetch(`${BFF_BASE}/api/distributors`, {
+      headers: { Cookie: cookieStore.toString() },
+    });
     if (!res.ok) return [];
     const data = await res.json();
     if (!data.success || !Array.isArray(data.distributors)) return [];
@@ -34,7 +38,10 @@ async function getDistributorOptions() {
 
 async function getCategoryOptions() {
   try {
-    const res = await fetch(`${BFF_BASE}/api/categories`);
+    const cookieStore = await cookies();
+    const res = await fetch(`${BFF_BASE}/api/categories`, {
+      headers: { Cookie: cookieStore.toString() },
+    });
     if (!res.ok) return [];
     const data = await res.json();
     if (!data.success || !Array.isArray(data.categories)) return [];

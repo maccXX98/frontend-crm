@@ -29,8 +29,12 @@ export const columns: ColumnDef<ProductEntity>[] = [
 
       if (imageUrl) {
         let fullUrl = imageUrl;
-        if (imageUrl.startsWith('/uploads') || imageUrl.startsWith('uploads')) {
-          fullUrl = `http://localhost:3000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+        // Backend stores uploads under /uploads/* and Fastify serves them at http://localhost:3000.
+        // webPath comes as "products/web/xxx.webp" (no leading slash, no "uploads/" prefix).
+        // Construct the absolute URL so the <img> can fetch it.
+        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+          const path = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl;
+          fullUrl = `http://localhost:3000/uploads/${path}`;
         }
         if (isValidImageUrl(fullUrl)) {
           return (
